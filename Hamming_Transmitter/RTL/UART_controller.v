@@ -11,8 +11,8 @@ module UART_controller (
 /////////////Main parameteres/////////////////////////////////
    
    localparam FREQUENCY = 32'd50_000_000;
-   localparam SPEED = 32'd9600;
-   localparam Divider = FREQUENCY/SPEED;
+   localparam SPEED     = 32'd9600;
+   localparam Divider   = FREQUENCY/SPEED;
 	
 //////////////////////////////////////////////////////////////	
 
@@ -20,23 +20,23 @@ module UART_controller (
 	reg dataReady;
 	wire rts;
 	
-	Transmitter #( FREQUENCY, SPEED ) T (
+	UART_FSM_Tx #( FREQUENCY, SPEED ) UART_Tx (
 		
-		.CLK_i    ( CLOCK_50  ),
-		.data     ( frame     ),
-		.dataReady( dataReady ),
-		.tx	  ( UART_TXD  ),
-		.rts      ( rts       ),
-		.reset_n  ( ~KEY[0]   )
+		.clk_i   ( CLOCK_50  ),
+		.data    ( frame     ),
+		.req_i   ( dataReady ),
+		.tx_o	 ( UART_TXD  ),
+		.ready_o ( rts       ),
+		.reset_n ( KEY[0]    )
 		
 	);
 	
 ////////////////////////////////////////////////////////
 
 	reg  [  7 : 0  ] data_to_code;
-	wire [ 15 : 0 ] package;
+	wire [ 15 : 0  ] package;
 
-	UART_controller UART ( .data_i( data_to_code ), .package_o( package ) );
+	Hamming_coder Coder ( .data_i( data_to_code ), .package_o( package ) );
 
 ////////////////////////////////////////////////////////
 

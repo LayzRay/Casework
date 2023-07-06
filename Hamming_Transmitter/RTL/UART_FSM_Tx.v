@@ -28,7 +28,7 @@ module UART_FSM_Tx #( parameter FREQUENCY = 32'd50_000_000, SPEED = 32'd15_000_0
     reg [ 31 : 0  ] tick_counter; // Счётчик тактовых импульсов
     reg 			CLK_low;  	  // Медленный CLOCK, по которому всё будет работать (соответствует заданной скорости передачи)
     
-    always @( posedge CLK_i )
+    always @( posedge clk_i )
     
 		if ( ~reset_n ) begin // Сброс внутренних регистров
 
