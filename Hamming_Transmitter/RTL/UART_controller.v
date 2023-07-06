@@ -1,68 +1,64 @@
-module RS_232 (
+module UART_controller (
 
-	input CLOCK_50,
+	input 	  CLOCK_50,
 	
-	input [1:0] KEY,
+	[ 1 : 0 ] KEY,
 	
-	output UART_TXD
+	output 	  UART_TXD
 
 );
 
 /////////////Main parameteres/////////////////////////////////
    
-   parameter FREQUENCY = 32'd50_000_000;
-   parameter SPEED = 32'd9600;
-   parameter FOLLOW_UP_PERIOD = 32'd1000;
-    
-   parameter PERIOD_PULSES = FREQUENCY/FOLLOW_UP_PERIOD;
-   parameter Divider = FREQUENCY/SPEED;
+   localparam FREQUENCY = 32'd50_000_000;
+   localparam SPEED = 32'd9600;
+   localparam Divider = FREQUENCY/SPEED;
 	
 //////////////////////////////////////////////////////////////	
 
-	reg [7:0] frame;
+	reg [ 7 : 0 ] frame;
 	reg dataReady;
 	wire rts;
 	
-	Transmitter #(FREQUENCY, SPEED) T (
+	Transmitter #( FREQUENCY, SPEED ) T (
 		
-		.CLK_i(CLOCK_50),
-		.data(frame),
-		.dataReady(dataReady),
-		.tx(UART_TXD),
-		.rts(rts),
-		.reset_n(!KEY[0])
+		.CLK_i    ( CLOCK_50  ),
+		.data     ( frame     ),
+		.dataReady( dataReady ),
+		.tx	  ( UART_TXD  ),
+		.rts      ( rts       ),
+		.reset_n  ( ~KEY[0]   )
 		
 	);
 	
 ////////////////////////////////////////////////////////
 
-	reg [7:0] data_to_code;
-	wire [15:0] package;
+	reg  [  7 : 0  ] data_to_code;
+	wire [ 15 : 0 ] package;
 
-	Coder_RS_232 CD (.data_i(data_to_code), .package_o(package));
+	UART_controller UART ( .data_i( data_to_code ), .package_o( package ) );
 
 ////////////////////////////////////////////////////////
 
-	reg [3:0] data_counter;
-	wire [7:0] Read_data;
+	reg  [ 3 : 0 ] data_counter;
+	wire [ 7 : 0 ] Read_data;
 
-	Data_memory DM (.A(data_counter), .RD(Read_data));
+	Data_memory DM ( .A( data_counter ), .RD( Read_data ) );
 	
 ///////Service VAR/////////////////////////////////////
 		
-	reg first_frame, CLK_low;
-	reg [1:0] state;
-	reg [31:0] tickCount;
-	reg KEY_presssed;
-	reg [2:0] sync_reg;
-	reg [7:0] error;
+	reg first_frame, CLK_low, KEY_presssed;
+	reg [ 1 : 0 ] state;
+	reg [ 31 : 0 ] tickCount;
+	reg [ 2 : 0 ] sync_reg;
+	reg [ 7 : 0 ] error;
 	
 ///////////FSM Parameteres/////////////
 	
-	parameter IDLE = 2'b00;
-	parameter DATA_READY = 2'b01;
-	parameter Transfer = 2'b10;
-	parameter READY_TO_SEND = 2'b11;
+	localparam IDLE = 2'b00;
+	localparam DATA_READY = 2'b01;
+	localparam Transfer = 2'b10;
+	localparam READY_TO_SEND = 2'b11;
 	
 //////////Begining/////////////////////	
 	
@@ -75,10 +71,9 @@ module RS_232 (
 	   tickCount <= 32'd0;
 		KEY_presssed <= 1'b0;
 		sync_reg <= 3'd0;
-		error <= 8'b00000100;
+		error <= 8'b01000100; // Можно внести ошибку
 	   
 	end
-	
 	
 	always @( posedge CLOCK_50 or negedge KEY[0] ) begin
 	
